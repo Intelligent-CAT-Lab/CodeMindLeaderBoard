@@ -72,10 +72,6 @@
                 src="https://img.shields.io/badge/arXiv-2402.09664-b31b1b.svg"
                   alt="paper"
                   class="img-fluid"></a>
-              <a href="/detailsPage.html"><img
-                  src="https://img.shields.io/badge/Leaderboard-Details-ff69b4.svg"
-                  alt="details"
-                  class="img-fluid"></a>
         </div>
 
         <img src="CodeMind-Logo.jpg" alt="Girl in a jacket" width="20%">
@@ -91,35 +87,33 @@
 
         <div class="d-flex flex-row justify-content-center gap-3">
 
-          <label for="taskDropdownLabel" style="display: none;">Tasks:</label>
+          <label for="taskDropdownLabel"  style="display: none;">Tasks:</label>
           <select id="taskDropdown">
-              <option value="" disabled selected>Select a task</option>
               <option value="ier">IER</option>
               <option value="der">DER</option>
               <option value="sr">SR</option>
           </select>
 
             <label for="datasetDropdownLabel"  style="display: none;">Dataset:</label>
-            <select id="datasetDropdown"  style="display: none;">
+            <select id="datasetDropdown">
                <!-- Options are set dynamically -->
             </select>
 
             <!-- <label for="generationtaskLabel" style="display: none;">Generation Task:</label> -->
-            <select id="generationtask" style="display: none;">
-               <!-- Options are set dynamically -->
-            </select>
+            <!-- <select id="generationtask" style="display: none;">
+            </select> -->
 
             <label for="problemIdDropdownLabel" style="display: none;">Problem ID:</label>
-            <select id="problemIdDropdown" style="display: none;">
+            <select id="problemIdDropdown">
                <!-- Options are set dynamically -->
             </select>
         </div>
 
-        <script>
+        <!-- <script>
             document.addEventListener("DOMContentLoaded", function() {
               filterDropdowns();
             });
-        </script>
+        </script> -->
         </div>
 
         <div id="detailsTable"></div>
@@ -130,6 +124,6 @@
         <!-- Table loaded dynamically -->
 
     </div>
-    <script src="detailsScript.js"></script>
+<script src="detailsScript.js" defer></script>
 </body>
 </html>

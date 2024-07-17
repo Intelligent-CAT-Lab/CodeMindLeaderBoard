@@ -56,10 +56,6 @@
                 src="https://img.shields.io/badge/arXiv-2402.09664-b31b1b.svg"
                   alt="paper"
                   class="img-fluid"></a>
-              <a href="detailsPage.html"><img
-                  src="https://img.shields.io/badge/Leaderboard-Details-ff69b4.svg"
-                  alt="details"
-                  class="img-fluid"></a>
         </div>
 
         <img src="CodeMind-Logo.jpg" alt="Girl in a jacket" width="20%">
@@ -77,7 +73,7 @@
             <span style="color: black;">}</span></strong>
           </code>
         <div class="d-flex flex-row justify-content-center gap-3">
-            <label for="dataset">Dataset:</label>
+            <label for="datasetL">Dataset:</label>
             <select id="dataset" onchange="filterData()">
                
                 <option value="CodeNet">CodeNet</option>
@@ -88,7 +84,7 @@
             </select>
 
             <!-- Role Dropdown -->
-            <label for="task">Tasks:</label>
+            <label for="taskL">Tasks:</label>
             <select id="task" onchange="handleDropDown(); filterData()">
                 <option value="ier">IER</option>
                 <option value="der">DER</option>
@@ -115,6 +111,8 @@
                 <option value="Java">Java</option>
                 <option value="Python">Python</option>
             </select>
+
+            <a href="detailsPage.html" id="detailsLink">More Details</a>
   
         </div>
         <table id="data-table"

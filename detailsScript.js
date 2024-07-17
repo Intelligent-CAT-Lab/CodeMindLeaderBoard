@@ -1,10 +1,53 @@
-var selectedDataset = "ier";
+var selectedTask = "ier"; // Default task value
+var selectedDataset = "MBPP"; // Default dataset value
 let problemIds = {};
 
-// Entry point
+document.addEventListener('DOMContentLoaded', function() {
+    // Parse query parameters
+    const datasetVal = getQueryParam('datasetVal');
+    const taskVal = getQueryParam('taskVal');
+
+    // Set default values or use parsed values
+    selectedTask = taskVal || "ier";
+    selectedDataset = datasetVal || "MBPP";
+
+    console.log("Initial selectedTask:", selectedTask);
+    console.log("Initial selectedDataset:", selectedDataset);
+
+    // Initialize event listeners for dropdowns
+    filterDropdowns();
+
+    // Fetch data and then set initial dropdown values
+    fetchData().then(data => {
+        let datasetData = data[0];
+        processData(datasetData);
+
+        // Set default dropdown values and trigger change events
+        setDropdownValue('taskDropdown', selectedTask);
+        setDropdownValue('datasetDropdown', selectedDataset);
+
+        // Optional: Set problemIdDropdown to the first option
+        document.getElementById('problemIdDropdown').selectedIndex = 0;
+        document.getElementById('problemIdDropdown').dispatchEvent(new Event('change'));
+    });
+});
+
+function setDropdownValue(dropdownId, value) {
+    const dropdown = document.getElementById(dropdownId);
+    if (!dropdown) {
+        console.error(`Dropdown with ID '${dropdownId}' not found.`);
+        return;
+    }
+    console.log(`Setting ${dropdownId} to value:`, value);
+    dropdown.value = value;
+    dropdown.dispatchEvent(new Event('change')); // Trigger change event
+}
+
 function filterDropdowns() {
     document.getElementById('taskDropdown').addEventListener('change', function() {
-        selectedDataset = this.value;
+        clearResults();
+        selectedTask = this.value;
+        console.log("Task changed to:", selectedTask);
         fetchData().then(data => {
             let datasetData = data[0];
             processData(datasetData);
@@ -12,87 +55,45 @@ function filterDropdowns() {
     });
 
     document.getElementById('datasetDropdown').addEventListener('change', function() {
-        console.log('Dataset selected:', this.value);
-        showGenerationTaskDropdown();
-        document.getElementById('generationTask').value = '';
-    });
-
-    document.getElementById('generationtask').addEventListener('change', function() {
-        console.log('Generation task selected:', this.value);
-        
-        let dataset = document.getElementById('datasetDropdown').value;
-        if(this.value == 'code synthesis') {
-            populateProblemIdDropdown(dataset);
-        }
-        else {
-        }
+        clearResults();
+        selectedDataset = this.value;
+        console.log('Dataset selected:', selectedDataset);
+        populateProblemIdDropdown(selectedDataset);
     });
 
     document.getElementById('problemIdDropdown').addEventListener('change', function() {
-        let dataset = document.getElementById('datasetDropdown').value;
+        clearResults();
         let problemId = this.value;
-        console.log('Problem ID selected:', this.value);
-        if (dataset && problemId) {
-            populateDetailsTable(dataset, problemId);
+        console.log('Problem ID selected:', problemId);
+        if (selectedDataset && problemId) {
+            populateDetailsTable(selectedDataset, problemId);
         }
     });
 }
 
-function showGenerationTaskDropdown() {
-    let tasks = ['code synthesis', 'code translation'];
-    populateDropdown('generationtask', tasks, 'Select a task');
-
-    document.getElementById('generationtask').style.display = 'inline';
-}
-
-// Fetch the data
-function fetchData() {
-    let fetchUrls;
-    switch (selectedDataset) {
-        case "ier":
-            fetchUrls = ['task1/dataset.json', 'task1/ier_data.json'];
-            break;
-        case "der":
-            fetchUrls = ['task2/dataset_synthesis.json', 'task2/der_data.json'];
-            break;
-        case "sr":
-            fetchUrls = ['task3/dataset.json', 'task3/sr_data.json'];
-            break;
-        default:
-            return Promise.reject("Invalid dataset selected");
+function clearResults() {
+    let contentArea = document.getElementById('detailsTable');
+    if (contentArea) {
+        contentArea.innerHTML = '';
     }
 
-    return Promise.all(fetchUrls.map(url => fetch(url).then(response => response.json())))
-        .catch(err => console.error("Error:", err));
+    contentArea = document.getElementById('modelResults');
+    if (contentArea) {
+        contentArea.innerHTML = '';
+    }
 }
 
-// Process the data
-function processData(data) {
-    let parsedData = data;
-    let datasets = Object.keys(parsedData);
-    console.log(datasets);
-
-    problemIds = {};
-    datasets.forEach(dataset => {
-        problemIds[dataset] = Object.keys(parsedData[dataset]);
-    });
-    console.log(problemIds);
-
-    populateDropdown('datasetDropdown', datasets, 'Select a dataset');
-
-}
-
-// Function to populate a dropdown
 function populateDropdown(dropdownId, items, defaultText) {
     let dropdown = document.getElementById(dropdownId);
-    while (dropdown.firstChild) {
-        dropdown.removeChild(dropdown.firstChild);
-    }
+    dropdown.innerHTML = '';
 
-    let defaultOption = document.createElement('option');
-    defaultOption.text = defaultText;
-    defaultOption.value = '';
-    dropdown.add(defaultOption);
+    // Optionally add a default "Please select" option
+    if (defaultText) {
+        let defaultOption = document.createElement('option');
+        defaultOption.text = defaultText;
+        defaultOption.value = '';
+        dropdown.add(defaultOption);
+    }
 
     items.forEach(item => {
         let option = document.createElement('option');
@@ -101,25 +102,27 @@ function populateDropdown(dropdownId, items, defaultText) {
         dropdown.add(option);
     });
 
-    dropdown.value = '';
+    // Automatically select the first real option if available
+    if (items.length > 0) {
+        dropdown.selectedIndex = defaultText ? 1 : 0; // Adjust based on whether a default option is added
+    }
+
     dropdown.style.display = 'inline';
-    document.getElementById(`${dropdownId}Label`).style.display = 'inline';
+
+    // Trigger change event after populating and selecting the first option
+    var event = new Event('change', { bubbles: true });
+    dropdown.dispatchEvent(event);
 }
 
-// Function to populate the problem id dropdown
-function populateProblemIdDropdown(selectedDataset) {
-    let problems = problemIds[selectedDataset] || [];
-    populateDropdown('problemIdDropdown', problems, 'Select a problem id');
-
-    document.getElementById('problemIdDropdown').style.display = 'inline';
-    document.getElementById('problemIdDropdownLabel').style.display = 'inline';
+function populateProblemIdDropdown(sd) {
+    let problems = problemIds[sd] || [];
+    populateDropdown('problemIdDropdown', problems, 'Select a problem ID');
 }
 
-// Function to populate the details table
 function populateDetailsTable(dataset, problemId) {
     fetchData().then(data => {
         let details;
-        if (selectedDataset == "ier") {
+        if (selectedTask == "ier") {
             details = data[0][dataset][problemId];
             let code = details['code'];
             let input = details['code_input'];
@@ -132,7 +135,7 @@ function populateDetailsTable(dataset, problemId) {
             ]);
 
             populateModelResults(data[1], dataset, problemId, 'ier');
-        } else if (selectedDataset == "der") {
+        } else if (selectedTask == "der") {
             details = data[0][dataset][problemId];
             let f1 = details['nl'];
             let f2 = details['asserts'];
@@ -153,8 +156,11 @@ function populateDetailsTable(dataset, problemId) {
     });
 }
 
-// Function to display details table
 function displayDetailsTable(rows) {
+    if (!rows || rows.length === 0) {
+        document.getElementById('detailsTable').innerHTML = '<p style="text-align:center; margin-top:20px;">Data is not available for this problem ID, Please select another one.</p>';
+        return;
+    }
     let tableContent = rows.map(row => `
         <tr>
             <th style="border: 1px solid black; text-align: left; padding: 10px;">${row.label}</th>
@@ -170,15 +176,25 @@ function displayDetailsTable(rows) {
     document.getElementById('detailsTable').innerHTML = table;
 }
 
-// Function to populate the model results
 function populateModelResults(data, dataset, problemId, type) {
     document.getElementById('modelResults').innerHTML = '';
     let models = Object.keys(data);
 
-    let html = models.map(model => {
-        if (!model) return '';
+    models.sort((a, b) => {
+        let labelA = data[a] && data[a][dataset] && data[a][dataset][problemId] ? data[a][dataset][problemId].label : -Infinity;
+        let labelB = data[b] && data[b][dataset] && data[b][dataset][problemId] ? data[b][dataset][problemId].label : -Infinity;
+    
+        return labelB - labelA;
+    });
 
+    let html = models.map(model => {
         let details = data[model][dataset][problemId];
+
+        if (!details) {
+            document.getElementById('modelResults').innerHTML = '<p style="text-align:center; margin-top:20px;">No data available for this problem ID, please select another one.</p>';
+            return;
+        }
+
         let color = type === 'ier' ? (details['label'] === 1 ? 'green' : 'red') :
                     details['label'] === 1 ? 'orange' : details['label'] === 0 ? 'red' : 'green';
 
@@ -211,5 +227,41 @@ function populateModelResults(data, dataset, problemId, type) {
     document.getElementById('modelResults').innerHTML = html;
 }
 
-// Initialize the filterDropdowns function
-filterDropdowns();
+function fetchData() {
+    let fetchUrls;
+    switch (selectedTask) {
+        case "ier":
+            fetchUrls = ['task1/dataset.json', 'task1/ier_data.json'];
+            break;
+        case "der":
+            fetchUrls = ['task2/dataset_synthesis.json', 'task2/der_data.json'];
+            break;
+        case "sr":
+            fetchUrls = ['task3/dataset.json', 'task3/sr_data.json'];
+            break;
+        default:
+            return Promise.reject("Invalid dataset selected");
+    }
+
+    return Promise.all(fetchUrls.map(url => fetch(url).then(response => response.json())))
+        .catch(err => console.error("Error:", err));
+}
+
+function processData(data) {
+    let parsedData = data;
+    let datasets = Object.keys(parsedData);
+    console.log("Datasets available:", datasets);
+
+    problemIds = {};
+    datasets.forEach(dataset => {
+        problemIds[dataset] = Object.keys(parsedData[dataset]);
+    });
+    console.log("Problem IDs:", problemIds);
+
+    populateDropdown('datasetDropdown', datasets, 'Select a dataset');
+}
+
+function getQueryParam(param) {
+    const searchParams = new URLSearchParams(window.location.search);
+    return searchParams.get(param);
+}
