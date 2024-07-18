@@ -1,6 +1,7 @@
 var selectedTask = "ier"; // Default task value
 var selectedDataset = "MBPP"; // Default dataset value
 let problemIds = {};
+let modelList = [];
 
 document.addEventListener('DOMContentLoaded', function() {
     // Parse query parameters
@@ -68,6 +69,19 @@ function filterDropdowns() {
         if (selectedDataset && problemId) {
             populateDetailsTable(selectedDataset, problemId);
         }
+        showModelDropdown(modelList);
+    });
+
+    document.getElementById('modelDropdown').addEventListener('change', function() {
+        // clearResults();
+        let model = this.value;
+        if(modelList.find(element => element === model) !== undefined){
+            console.log('Model selected:', model);
+            let problemId = document.getElementById('problemIdDropdown').value;
+            if (selectedDataset && problemId) {
+                populateDetailsTable(selectedDataset, problemId, model);
+            }
+        }
     });
 }
 
@@ -104,7 +118,8 @@ function populateDropdown(dropdownId, items, defaultText) {
 
     // Automatically select the first real option if available
     if (items.length > 0) {
-        dropdown.selectedIndex = defaultText ? 1 : 0; // Adjust based on whether a default option is added
+        dropdown.selectedIndex = 0;
+        // dropdown.selectedIndex = defaultText ? 0 : 1; // Adjust based on whether a default option is added
     }
 
     dropdown.style.display = 'inline';
@@ -116,10 +131,11 @@ function populateDropdown(dropdownId, items, defaultText) {
 
 function populateProblemIdDropdown(sd) {
     let problems = problemIds[sd] || [];
-    populateDropdown('problemIdDropdown', problems, 'Select a problem ID');
+    populateDropdown('problemIdDropdown', problems, undefined);
+    // populateDropdown('problemIdDropdown', problems, 'Select a problem ID');
 }
 
-function populateDetailsTable(dataset, problemId) {
+function populateDetailsTable(dataset, problemId, model) {
     fetchData().then(data => {
         let details;
         if (selectedTask == "ier") {
@@ -134,7 +150,7 @@ function populateDetailsTable(dataset, problemId) {
                 { label: 'Expected Output:', value: groundTruth }
             ]);
 
-            populateModelResults(data[1], dataset, problemId, 'ier');
+            populateModelResults(data[1], dataset, problemId, 'ier', model);
         } else if (selectedTask == "der") {
             details = data[0][dataset][problemId];
             let f1 = details['nl'];
@@ -176,7 +192,7 @@ function displayDetailsTable(rows) {
     document.getElementById('detailsTable').innerHTML = table;
 }
 
-function populateModelResults(data, dataset, problemId, type) {
+function populateModelResults(data, dataset, problemId, type, selectedModel) {
     document.getElementById('modelResults').innerHTML = '';
     let models = Object.keys(data);
 
@@ -188,8 +204,15 @@ function populateModelResults(data, dataset, problemId, type) {
     });
 
     let html = models.map(model => {
-        let details = data[model][dataset][problemId];
+        if(modelList.find(element => element === model) === undefined){ 
+            modelList.push(model) 
+        };
 
+        if(selectedModel && selectedModel !== model) {
+            return null;
+        }
+
+        let details = data[model][dataset][problemId];
         if (!details) {
             document.getElementById('modelResults').innerHTML = '<p style="text-align:center; margin-top:20px;">No data available for this problem ID, please select another one.</p>';
             return;
@@ -258,10 +281,15 @@ function processData(data) {
     });
     console.log("Problem IDs:", problemIds);
 
-    populateDropdown('datasetDropdown', datasets, 'Select a dataset');
+    // populateDropdown('datasetDropdown', datasets, 'Select a dataset');
+    populateDropdown('datasetDropdown', datasets, undefined);
 }
 
 function getQueryParam(param) {
     const searchParams = new URLSearchParams(window.location.search);
     return searchParams.get(param);
+}
+
+function showModelDropdown(mList) {
+    populateDropdown('modelDropdown', mList, "Select a model");
 }
