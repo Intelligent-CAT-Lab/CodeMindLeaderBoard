@@ -24,12 +24,12 @@ document.addEventListener('DOMContentLoaded', function() {
         processData(datasetData);
 
         // Set default dropdown values and trigger change events
-        setDropdownValue('taskDropdown', selectedTask);
-        setDropdownValue('datasetDropdown', selectedDataset);
+        // setDropdownValue('taskDropdown', selectedTask);
+        // setDropdownValue('datasetDropdown', selectedDataset);
 
-        // Optional: Set problemIdDropdown to the first option
-        document.getElementById('problemIdDropdown').selectedIndex = 0;
-        document.getElementById('problemIdDropdown').dispatchEvent(new Event('change'));
+        // // Optional: Set problemIdDropdown to the first option
+        // document.getElementById('problemIdDropdown').selectedIndex = 0;
+        // document.getElementById('problemIdDropdown').dispatchEvent(new Event('change'));
     });
 });
 
@@ -97,7 +97,7 @@ function clearResults() {
     }
 }
 
-function populateDropdown(dropdownId, items, defaultText) {
+function populateDropdown(dropdownId, items, defaultText, selectedOption) {
     let dropdown = document.getElementById(dropdownId);
     dropdown.innerHTML = '';
 
@@ -118,7 +118,11 @@ function populateDropdown(dropdownId, items, defaultText) {
 
     // Automatically select the first real option if available
     if (items.length > 0) {
-        dropdown.selectedIndex = 0;
+        if (selectedOption !== undefined) {
+            dropdown.value = selectedOption;
+        } else {
+            dropdown.selectedIndex = 0;
+        }
         // dropdown.selectedIndex = defaultText ? 0 : 1; // Adjust based on whether a default option is added
     }
 
@@ -282,7 +286,7 @@ function processData(data) {
     console.log("Problem IDs:", problemIds);
 
     // populateDropdown('datasetDropdown', datasets, 'Select a dataset');
-    populateDropdown('datasetDropdown', datasets, undefined);
+    populateDropdown('datasetDropdown', datasets, undefined, selectedDataset);
 }
 
 function getQueryParam(param) {
@@ -291,5 +295,5 @@ function getQueryParam(param) {
 }
 
 function showModelDropdown(mList) {
-    populateDropdown('modelDropdown', mList, "Select a model");
+    populateDropdown('modelDropdown', mList, "Select a model", undefined);
 }
