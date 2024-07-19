@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
         processData(datasetData);
 
         // Set default dropdown values and trigger change events
-        // setDropdownValue('taskDropdown', selectedTask);
+        setDropdownValue('taskDropdown', selectedTask);
         // setDropdownValue('datasetDropdown', selectedDataset);
 
         // // Optional: Set problemIdDropdown to the first option
