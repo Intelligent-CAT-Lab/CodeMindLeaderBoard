@@ -83,6 +83,23 @@ function filterDropdowns() {
             }
         }
     });
+
+    attachCollapsibleListeners();
+}
+
+function attachCollapsibleListeners() {
+    var coll = document.getElementsByClassName("collapsible");
+    for (var i = 0; i < coll.length; i++) {
+        coll[i].addEventListener("click", function() {
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.display === "block") {
+                content.style.display = "none";
+            } else {
+                content.style.display = "block";
+            }
+        });
+    }
 }
 
 function clearResults() {
@@ -228,6 +245,7 @@ function populateModelResults(data, dataset, problemId, type, selectedModel) {
         let reasoning = details['reasoning'] || 'Not Available';
         let output = details['output'] || 'Not Available';
         let synthesized_code = type === 'der' ? details['synthesized_code'] || 'Not Available' : '';
+        let dContent = "  Lorem ipsum...";
 
         return `
             <label style="background-color: ${color}; width: 100%; display: block; margin-bottom: 10px; color:white;">${model}</label>
@@ -248,10 +266,16 @@ function populateModelResults(data, dataset, problemId, type, selectedModel) {
                     </tr>` : ''}
                 </tbody>
             </table>
+            <p class="collapsible" style="display: none;">More Details</p>
+            <div class="ccontent" style="display: none;">
+                <p>${dContent}</p>
+            </div>
             <br>`;
     }).join('');
 
     document.getElementById('modelResults').innerHTML = html;
+    // Re-attach the collapsible event listeners
+    attachCollapsibleListeners();
 }
 
 function fetchData() {
@@ -297,3 +321,7 @@ function getQueryParam(param) {
 function showModelDropdown(mList) {
     populateDropdown('modelDropdown', mList, "Select a model", undefined);
 }
+
+// document.addEventListener('DOMContentLoaded', function() {
+//     attachCollapsibleListeners(); // Ensure listeners are attached on page load
+// });
