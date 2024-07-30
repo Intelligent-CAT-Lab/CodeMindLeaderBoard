@@ -1,35 +1,25 @@
 var selectedTask = "ier"; // Default task value
 var selectedDataset = "MBPP"; // Default dataset value
+var selectedLanguage = undefined; // Default language value
 let problemIds = {};
 let modelList = [];
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Parse query parameters
     const datasetVal = getQueryParam('datasetVal');
     const taskVal = getQueryParam('taskVal');
 
-    // Set default values or use parsed values
     selectedTask = taskVal || "ier";
     selectedDataset = datasetVal || "MBPP";
 
     console.log("Initial selectedTask:", selectedTask);
     console.log("Initial selectedDataset:", selectedDataset);
-
-    // Initialize event listeners for dropdowns
     filterDropdowns();
 
-    // Fetch data and then set initial dropdown values
     fetchData().then(data => {
         let datasetData = data[0];
         processData(datasetData);
 
-        // Set default dropdown values and trigger change events
         setDropdownValue('taskDropdown', selectedTask);
-        // setDropdownValue('datasetDropdown', selectedDataset);
-
-        // // Optional: Set problemIdDropdown to the first option
-        // document.getElementById('problemIdDropdown').selectedIndex = 0;
-        // document.getElementById('problemIdDropdown').dispatchEvent(new Event('change'));
     });
 });
 
@@ -40,8 +30,12 @@ function setDropdownValue(dropdownId, value) {
         return;
     }
     console.log(`Setting ${dropdownId} to value:`, value);
-    dropdown.value = value;
-    dropdown.dispatchEvent(new Event('change')); // Trigger change event
+   if (value!==undefined) {
+        dropdown.value = value;
+   } else {
+        dropdown.selectedIndex = 0;
+   }
+    dropdown.dispatchEvent(new Event('change'));
 }
 
 function filterDropdowns() {
@@ -59,6 +53,14 @@ function filterDropdowns() {
         clearResults();
         selectedDataset = this.value;
         console.log('Dataset selected:', selectedDataset);
+        setDropdownValue('languageDropdown', undefined);
+        populateProblemIdDropdown(selectedDataset);
+    });
+
+    document.getElementById('languageDropdown').addEventListener('change', function() {
+        clearResults();
+        selectedLanguage = this.value;
+        setDropdownValue('languageDropdown', selectedLanguage);
         populateProblemIdDropdown(selectedDataset);
     });
 
@@ -118,7 +120,6 @@ function populateDropdown(dropdownId, items, defaultText, selectedOption) {
     let dropdown = document.getElementById(dropdownId);
     dropdown.innerHTML = '';
 
-    // Optionally add a default "Please select" option
     if (defaultText) {
         let defaultOption = document.createElement('option');
         defaultOption.text = defaultText;
@@ -133,45 +134,88 @@ function populateDropdown(dropdownId, items, defaultText, selectedOption) {
         dropdown.add(option);
     });
 
-    // Automatically select the first real option if available
     if (items.length > 0) {
         if (selectedOption !== undefined) {
             dropdown.value = selectedOption;
         } else {
             dropdown.selectedIndex = 0;
         }
-        // dropdown.selectedIndex = defaultText ? 0 : 1; // Adjust based on whether a default option is added
     }
 
     dropdown.style.display = 'inline';
 
-    // Trigger change event after populating and selecting the first option
     var event = new Event('change', { bubbles: true });
     dropdown.dispatchEvent(event);
 }
 
 function populateProblemIdDropdown(sd) {
-    let problems = problemIds[sd] || [];
-    populateDropdown('problemIdDropdown', problems, undefined);
-    // populateDropdown('problemIdDropdown', problems, 'Select a problem ID');
+    selectedDataset = sd;
+
+    if (selectedDataset === "CodeNet" || selectedDataset === "Avatar") {
+        document.getElementById('languageDropdown').style.display = 'inline';
+        selectedLanguage = selectedLanguage || "Java";
+        let allProblems = problemIds[selectedDataset] || {};
+        let filteredProblems = []
+        for (const [key, val] of Object.entries(allProblems)) {
+            if (val.includes(selectedLanguage)) {
+                filteredProblems.push(key);
+            }
+        }
+
+        populateDropdown('problemIdDropdown', filteredProblems, undefined);
+    } else {
+        document.getElementById('languageDropdown').style.display = 'none';
+        selectedLanguage = undefined;
+
+        let allProblems = Object.keys(problemIds[selectedDataset] || {});
+        populateDropdown('problemIdDropdown', allProblems, undefined);
+    }
 }
 
 function populateDetailsTable(dataset, problemId, model) {
     fetchData().then(data => {
         let details;
         if (selectedTask == "ier") {
-            details = data[0][dataset][problemId];
-            let code = details['code'];
-            let input = details['code_input'];
-            let groundTruth = data[1]["ChatGPT_3.5"]?.[dataset][problemId]['ground_truth'] ?? 'Not Available';
+            if (selectedLanguage!==undefined) {
+                details = data[0][dataset][problemId];
+                let selectedDetail = details.find(detail => detail.programming_language === selectedLanguage);
+                let groundTruthDetails = data[1]["ChatGPT_3.5"]?.[dataset][problemId];
 
-            displayDetailsTable([
-                { label: 'Code:', value: code },
-                { label: 'Input:', value: input },
-                { label: 'Expected Output:', value: groundTruth }
-            ]);
+                let code, input, groundTruth;
+                if (selectedDetail) {
+                    code = selectedDetail.code;
+                    input = selectedDetail.code_input;
+                } else {
+                    code = 'Code not available for the selected language.';
+                    input = 'Input not available for the selected language.';
+                }
+                let selectedGroundTruthDetail = groundTruthDetails?.find(detail => detail.programming_language === selectedLanguage);
+                if (selectedGroundTruthDetail) {
+                    groundTruth = selectedGroundTruthDetail.ground_truth;
+                } else {
+                    groundTruth = 'Ground truth not available for the selected language.';
+                }
 
-            populateModelResults(data[1], dataset, problemId, 'ier', model);
+                displayDetailsTable([
+                    { label: 'Code:', value: code },
+                    { label: 'Input:', value: input },
+                    { label: 'Expected Output:', value: groundTruth }
+                ]);
+                populateModelResults(data[1], dataset, problemId, 'ier', model);
+            } else {
+                details = data[0][dataset][problemId];
+                let code = details['code'];
+                let input = details['code_input'];
+                let groundTruth = data[1]["ChatGPT_3.5"]?.[dataset][problemId]['ground_truth'] ?? 'Not Available';
+
+                displayDetailsTable([
+                    { label: 'Code:', value: code },
+                    { label: 'Input:', value: input },
+                    { label: 'Expected Output:', value: groundTruth }
+                ]);
+
+                populateModelResults(data[1], dataset, problemId, 'ier', model);
+            }
         } else if (selectedTask == "der") {
             details = data[0][dataset][problemId];
             let f1 = details['nl'];
@@ -217,9 +261,34 @@ function populateModelResults(data, dataset, problemId, type, selectedModel) {
     document.getElementById('modelResults').innerHTML = '';
     let models = Object.keys(data);
 
+    // models.sort((a, b) => {
+    //     let labelA = data[a] && data[a][dataset] && data[a][dataset][problemId] ? data[a][dataset][problemId].label : -Infinity;
+    //     let labelB = data[b] && data[b][dataset] && data[b][dataset][problemId] ? data[b][dataset][problemId].label : -Infinity;
+    
+    //     return labelB - labelA;
+    // });
+
     models.sort((a, b) => {
-        let labelA = data[a] && data[a][dataset] && data[a][dataset][problemId] ? data[a][dataset][problemId].label : -Infinity;
-        let labelB = data[b] && data[b][dataset] && data[b][dataset][problemId] ? data[b][dataset][problemId].label : -Infinity;
+        let labelA = -Infinity;
+        let labelB = -Infinity;
+    
+        if (data[a] && data[a][dataset] && data[a][dataset][problemId]) {
+            let detailsA = data[a][dataset][problemId];
+            let filteredDetailsA = selectedLanguage
+                ? detailsA.find(detail => detail.programming_language === selectedLanguage)
+                : detailsA[0]; // Use the first detail if no language is selected
+    
+            labelA = filteredDetailsA ? filteredDetailsA.label : -Infinity;
+        }
+    
+        if (data[b] && data[b][dataset] && data[b][dataset][problemId]) {
+            let detailsB = data[b][dataset][problemId];
+            let filteredDetailsB = selectedLanguage
+                ? detailsB.find(detail => detail.programming_language === selectedLanguage)
+                : detailsB[0]; // Use the first detail if no language is selected
+    
+            labelB = filteredDetailsB ? filteredDetailsB.label : -Infinity;
+        }
     
         return labelB - labelA;
     });
@@ -239,12 +308,23 @@ function populateModelResults(data, dataset, problemId, type, selectedModel) {
             return;
         }
 
-        let color = type === 'ier' ? (details['label'] === 1 ? 'green' : 'red') :
-                    details['label'] === 1 ? 'orange' : details['label'] === 0 ? 'red' : 'green';
+        let filteredDetails;
+        if (selectedLanguage) {
+            filteredDetails = details.find(detail => detail.programming_language === selectedLanguage);
+            if (!filteredDetails) {
+                document.getElementById('modelResults').innerHTML = `<p style="text-align:center; margin-top:20px;">No data available for the selected language (${selectedLanguage}), please select another one.</p>`;
+                return;
+            }
+        } else {
+            filteredDetails = details[0];
+        }
 
-        let reasoning = details['reasoning'] || 'Not Available';
-        let output = details['output'] || 'Not Available';
-        let synthesized_code = type === 'der' ? details['synthesized_code'] || 'Not Available' : '';
+        let color = type === 'ier' ? (filteredDetails['label'] === 1 ? 'green' : 'red') :
+            filteredDetails['label'] === 1 ? 'orange' : filteredDetails['label'] === 0 ? 'red' : 'green';
+        let reasoning = filteredDetails['reasoning'] || 'Not Available';
+        let output = filteredDetails['output'] || 'Not Available';
+        let synthesized_code = type === 'der' ? filteredDetails['synthesized_code'] || 'Not Available' : '';
+
         let dContent = "  Lorem ipsum...";
 
         return `
@@ -274,7 +354,6 @@ function populateModelResults(data, dataset, problemId, type, selectedModel) {
     }).join('');
 
     document.getElementById('modelResults').innerHTML = html;
-    // Re-attach the collapsible event listeners
     attachCollapsibleListeners();
 }
 
@@ -305,11 +384,19 @@ function processData(data) {
 
     problemIds = {};
     datasets.forEach(dataset => {
-        problemIds[dataset] = Object.keys(parsedData[dataset]);
+        problemIds[dataset] = {};
+        Object.keys(parsedData[dataset]).forEach(problemId => {
+            const problemData = parsedData[dataset][problemId];
+            if (Array.isArray(problemData)) {
+                problemIds[dataset][problemId] = problemData.map(entry => entry.programming_language).filter(Boolean);
+            } else if (typeof problemData === 'object' && problemData !== null) {
+                problemIds[dataset][problemId] = problemData.programming_language || null;
+            } else {
+                problemIds[dataset][problemId] = null; // or some default value
+            }
+        });
     });
-    console.log("Problem IDs:", problemIds);
 
-    // populateDropdown('datasetDropdown', datasets, 'Select a dataset');
     populateDropdown('datasetDropdown', datasets, undefined, selectedDataset);
 }
 
