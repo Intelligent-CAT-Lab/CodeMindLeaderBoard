@@ -316,7 +316,7 @@ function populateModelResults(data, dataset, problemId, type, selectedModel) {
                 return;
             }
         } else {
-            filteredDetails = details[0];
+            filteredDetails = details;
         }
 
         let color = type === 'ier' ? (filteredDetails['label'] === 1 ? 'green' : 'red') :
