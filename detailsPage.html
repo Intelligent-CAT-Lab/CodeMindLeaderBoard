@@ -26,6 +26,51 @@
         background-color: #f9f9f9;
         font-style: italic;
   }
+
+  .collapsible {
+  background-color: transparent;
+  color: black;
+  cursor: pointer;
+  padding: 10px;
+  width: 100%;
+  border-left: 1px solid #000000;
+  border-right: 1px solid #000000;
+  border-bottom: 1px solid #000000;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+  display: block;
+  margin: 0; /* Remove margin */
+}
+
+.collapsible.active {
+  color: darkgray;
+}
+
+.collapsible:after {
+  content: '\002B'; /* Unicode character for "+" sign */
+  color: black;
+  font-weight: bold;
+  float: right;
+  margin-left: 5px;
+  border-bottom: 0px;
+}
+
+.collapsible.active:after {
+  content: "\2212"; /* Unicode character for "−" sign */
+}
+
+.ccontent {
+  padding: 10px;
+  display: none;
+  overflow: hidden;
+  background-color: #f9f9f9;
+  border-left: 1px solid #000000;
+  border-right: 1px solid #000000;
+  border-bottom: 1px solid #000000;
+  text-align: left;
+}
+
   #notes {
     font-size: 1em;
   }
@@ -72,10 +117,6 @@
                 src="https://img.shields.io/badge/arXiv-2402.09664-b31b1b.svg"
                   alt="paper"
                   class="img-fluid"></a>
-              <a href="/detailsPage.html"><img
-                  src="https://img.shields.io/badge/Leaderboard-Details-ff69b4.svg"
-                  alt="details"
-                  class="img-fluid"></a>
         </div>
 
         <img src="CodeMind-Logo.jpg" alt="Girl in a jacket" width="20%">
@@ -91,35 +132,43 @@
 
         <div class="d-flex flex-row justify-content-center gap-3">
 
-          <label for="taskDropdownLabel" style="display: none;">Tasks:</label>
+          <label for="taskDropdownLabel"  style="display: none;">Tasks:</label>
           <select id="taskDropdown">
-              <option value="" disabled selected>Select a task</option>
               <option value="ier">IER</option>
-              <option value="der">DER</option>
-              <option value="sr">SR</option>
+              <!-- <option value="der">DER</option>
+              <option value="sr">SR</option> -->
           </select>
 
             <label for="datasetDropdownLabel"  style="display: none;">Dataset:</label>
-            <select id="datasetDropdown"  style="display: none;">
+            <select id="datasetDropdown">
                <!-- Options are set dynamically -->
             </select>
 
             <!-- <label for="generationtaskLabel" style="display: none;">Generation Task:</label> -->
-            <select id="generationtask" style="display: none;">
-               <!-- Options are set dynamically -->
+            <!-- <select id="generationtask" style="display: none;">
+            </select> -->
+            <label for="languageLabel" style="display: none;">Language:</label>
+            <select id="languageDropdown" style="display: none;">
+              <option value="Java">Java</option>
+              <option value="Python">Python</option>
             </select>
 
             <label for="problemIdDropdownLabel" style="display: none;">Problem ID:</label>
-            <select id="problemIdDropdown" style="display: none;">
+            <select id="problemIdDropdown">
+               <!-- Options are set dynamically -->
+            </select>
+
+            <label for="modelDropdownLabel" style="display: none;">Problem ID:</label>
+            <select id="modelDropdown" style="display: none;">
                <!-- Options are set dynamically -->
             </select>
         </div>
 
-        <script>
+        <!-- <script>
             document.addEventListener("DOMContentLoaded", function() {
               filterDropdowns();
             });
-        </script>
+        </script> -->
         </div>
 
         <div id="detailsTable"></div>
@@ -130,6 +179,6 @@
         <!-- Table loaded dynamically -->
 
     </div>
-    <script src="detailsScript.js"></script>
+<script src="detailsScript.js" defer></script>
 </body>
 </html>

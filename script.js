@@ -10,8 +10,26 @@ document.addEventListener('DOMContentLoaded', function() {
             filterData(); // Optionally filter data initially if needed
         })
         .catch(error => console.error('Error loading the CSV file:', error));
+
+    var detailsLink = document.getElementById('detailsLink');
+  
+    detailsLink.addEventListener('click', function(event) {
+        event.preventDefault(); // Prevent the default link behavior
+    
+        // Get selected values from dropdowns
+        var datasetVal = document.getElementById('dataset').value;
+        var taskVal = document.getElementById('task').value;
+    
+        // Construct the new URL with encoded query parameters
+        var newHref = 'detailsPage.html?datasetVal=' + encodeURIComponent(datasetVal) + '&taskVal=' + encodeURIComponent(taskVal);
+    
+        // Navigate to the new URL
+        window.location.href = newHref;
+    });
+    
 });
 
+  
 function parseCSV(csv) {
     const lines = csv.split('\n');
     const result = [];
