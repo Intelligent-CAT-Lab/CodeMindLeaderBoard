@@ -36,6 +36,9 @@ function parseCSV(csv) {
     const headers = lines[0].split(',');
 
     for (let i = 1; i < lines.length; i++) {
+        if (!lines[i]) {
+            continue
+        }
         const obj = {};
         const currentline = lines[i].split(',');
 
