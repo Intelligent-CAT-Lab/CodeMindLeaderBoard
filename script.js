@@ -76,7 +76,7 @@ function displayData(filteredData, task, gtask) {
     tbody.innerHTML = ""; // Clear existing data rows
 
     if (task === 'ier') {
-        thead.innerHTML = "<th>Dataset</th><th>Model</th><th>R<sub>IER</sub></th>";
+        thead.innerHTML = "<th>Dataset</th><th>Model</th><th>R<sub>ER</sub></th>";
         filteredData.forEach(item => {
             const row = document.createElement("tr");
             row.innerHTML = `<td>${item.Dataset}</td><td>${item.Model}</td><td>${item.RIER}</td>`;
